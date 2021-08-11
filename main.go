@@ -12,16 +12,19 @@ import (
 	"math"
 	"math/rand"
 
+	"github.com/google/uuid"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/audio"
 	"github.com/hajimehoshi/ebiten/v2/audio/mp3"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"github.com/hajimehoshi/ebiten/v2/text"
+	logging "github.com/tsujio/game-logging-server/client"
 	"golang.org/x/image/font"
 	"golang.org/x/image/font/opentype"
 )
 
 const (
+	gameName                      = "birdman"
 	screenWidth                   = 640
 	screenHeight                  = 480
 	birdmanHeight                 = 100
@@ -129,6 +132,8 @@ const (
 )
 
 type Game struct {
+	playID                                  string
+	initializeCount                         int
 	mode                                    Mode
 	birdman                                 *Birdman
 	birds                                   []Bird
@@ -149,6 +154,11 @@ func (g *Game) Update() error {
 	switch g.mode {
 	case ModeTitle:
 		if g.isJustTapped() {
+			logging.LogAsync(gameName, map[string]interface{}{
+				"play_id": g.playID,
+				"action":  "start_game",
+			})
+
 			g.mode = ModeGame
 		}
 	case ModeGame:
@@ -235,6 +245,13 @@ func (g *Game) Update() error {
 
 			// Birdman fall
 			if birdman.y > screenHeight {
+				logging.LogAsync(gameName, map[string]interface{}{
+					"play_id":       g.playID,
+					"action":        "game_over",
+					"x":             birdman.x,
+					"damaged_count": birdman.damagedCount,
+				})
+
 				g.mode = ModeGameOver
 				g.gameOverAudio.Rewind()
 				g.gameOverAudio.Play()
@@ -251,6 +268,13 @@ func (g *Game) Update() error {
 			birdman.y += 1
 
 			if birdman.y > screenHeight {
+				logging.LogAsync(gameName, map[string]interface{}{
+					"play_id":       g.playID,
+					"action":        "game_over",
+					"x":             birdman.x,
+					"damaged_count": birdman.damagedCount,
+				})
+
 				g.mode = ModeGameOver
 				g.gameOverAudio.Rewind()
 				g.gameOverAudio.Play()
@@ -441,6 +465,14 @@ func loadAudio(name string, audioContext *audio.Context) *audio.Player {
 }
 
 func (g *Game) initialize() {
+	g.initializeCount++
+
+	logging.LogAsync(gameName, map[string]interface{}{
+		"play_id": g.playID,
+		"action":  "initialize",
+		"count":   g.initializeCount,
+	})
+
 	g.mode = ModeTitle
 	g.cameraX = -100
 	g.cameraY = 0
@@ -476,7 +508,18 @@ func main() {
 	ebiten.SetWindowSize(screenWidth, screenHeight)
 	ebiten.SetWindowTitle("Birdman")
 
-	game := &Game{}
+	playIDObj, err := uuid.NewRandom()
+	var playID string
+	if err != nil {
+		playID = "?"
+	} else {
+		playID = playIDObj.String()
+
+	}
+	game := &Game{
+		playID:          playID,
+		initializeCount: 0,
+	}
 	game.initialize()
 
 	if err := ebiten.RunGame(game); err != nil {
