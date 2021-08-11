@@ -34,13 +34,122 @@ const (
 	birdmanAndBirdCollisionRadius = 50
 	initialBirdmanPosY            = screenHeight / 3
 	cliffWidth                    = 100
-	titleFontSize                 = fontSize * 1.5
-	fontSize                      = 24
-	smallFontSize                 = fontSize / 2
+	titleFontSize                 = regularFontSize * 1.5
+	regularFontSize               = 24
+	smallFontSize                 = regularFontSize / 2
 )
 
 //go:embed resources
 var resources embed.FS
+
+var (
+	seaImg                            = loadImage("resources/sea.png")
+	cliffImg                          = loadImage("resources/cliff.png")
+	backgroundImg                     = loadImage("resources/background.png")
+	birdmanImg                        = loadImage("resources/birdman.png")
+	birdImg                           = loadImage("resources/bird.png")
+	titleFont, regularFont, smallFont = loadFont("resources/PressStart2P-Regular.ttf")
+	audioContext                      = audio.NewContext(48000)
+	damageAudio                       = loadAudio("resources/魔王魂  レトロ22.mp3", audioContext)
+	gameOverAudio                     = loadAudio("resources/魔王魂  レトロ12.mp3", audioContext)
+	flyingAudio                       = loadAudio("resources/魔王魂 効果音 羽音01.mp3", audioContext)
+)
+
+func loadImage(name string) *ebiten.Image {
+	f, err := resources.Open(name)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer f.Close()
+	img, _, err := image.Decode(f)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return ebiten.NewImageFromImage(img)
+}
+
+func loadFont(name string) (titleFont, regularFont, smallFont font.Face) {
+	f, err := resources.Open(name)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer f.Close()
+	fontData, err := ioutil.ReadAll(f)
+	if err != nil {
+		log.Fatal(err)
+	}
+	tt, err := opentype.Parse(fontData)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	const dpi = 72
+	titleFont, err = opentype.NewFace(tt, &opentype.FaceOptions{
+		Size:    titleFontSize,
+		DPI:     dpi,
+		Hinting: font.HintingFull,
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+	regularFont, err = opentype.NewFace(tt, &opentype.FaceOptions{
+		Size:    regularFontSize,
+		DPI:     dpi,
+		Hinting: font.HintingFull,
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+	smallFont, err = opentype.NewFace(tt, &opentype.FaceOptions{
+		Size:    smallFontSize,
+		DPI:     dpi,
+		Hinting: font.HintingFull,
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return
+}
+
+func loadAudio(name string, audioContext *audio.Context) *audio.Player {
+	f, err := resources.Open(name)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer f.Close()
+
+	data, err := ioutil.ReadAll(f)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	stream, err := mp3.Decode(audioContext, bytes.NewReader(data))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	audioData, err := ioutil.ReadAll(stream)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	player := audio.NewPlayerFromBytes(audioContext, audioData)
+
+	return player
+}
+
+func formatIntComma(n int) string {
+	s := fmt.Sprintf("%d", n)
+	ret := ""
+	for i, c := range s {
+		ret += string(c)
+		if i+1 < len(s) && (len(s)-i-1)%3 == 0 {
+			ret += ","
+		}
+	}
+	return ret
+}
 
 type BirdmanState int
 
@@ -132,16 +241,12 @@ const (
 )
 
 type Game struct {
-	playID                                  string
-	initializeCount                         int
-	mode                                    Mode
-	birdman                                 *Birdman
-	birds                                   []Bird
-	cameraX, cameraY                        int
-	seaImg, cliffImg, backgroundImg         *ebiten.Image
-	titleFont, regularFont, smallFont       font.Face
-	audioContext                            *audio.Context
-	damageAudio, gameOverAudio, flyingAudio *audio.Player
+	playID           string
+	initializeCount  int
+	mode             Mode
+	birdman          *Birdman
+	birds            []Bird
+	cameraX, cameraY int
 }
 
 func (g *Game) isJustTapped() bool {
@@ -175,7 +280,7 @@ func (g *Game) Update() error {
 			// Birds appearance
 			if birdman.x%200 == 0 {
 				b := Bird{
-					img: loadImage("resources/bird.png"),
+					img: birdImg,
 					x:   birdman.x + screenWidth,
 					y:   50 + rand.Int()%(screenHeight-100),
 				}
@@ -209,8 +314,8 @@ func (g *Game) Update() error {
 				ay /= birdman.damagedCount + 1
 				birdman.vy += ay
 
-				g.flyingAudio.Rewind()
-				g.flyingAudio.Play()
+				flyingAudio.Rewind()
+				flyingAudio.Play()
 			}
 
 			// Birdman gravity
@@ -227,8 +332,9 @@ func (g *Game) Update() error {
 			if birdman.y < 0 {
 				birdman.damagedCount += 1
 				birdman.state = StateDamaged
-				g.damageAudio.Rewind()
-				g.damageAudio.Play()
+
+				damageAudio.Rewind()
+				damageAudio.Play()
 			}
 
 			// Birdman and birds collision
@@ -237,8 +343,10 @@ func (g *Game) Update() error {
 					math.Pow(birdmanAndBirdCollisionRadius, 2) {
 					birdman.damagedCount += 1
 					birdman.state = StateDamaged
-					g.damageAudio.Rewind()
-					g.damageAudio.Play()
+
+					damageAudio.Rewind()
+					damageAudio.Play()
+
 					break
 				}
 			}
@@ -253,8 +361,9 @@ func (g *Game) Update() error {
 				})
 
 				g.mode = ModeGameOver
-				g.gameOverAudio.Rewind()
-				g.gameOverAudio.Play()
+
+				gameOverAudio.Rewind()
+				gameOverAudio.Play()
 			}
 		case StateDamaged:
 			// Birds move
@@ -276,8 +385,9 @@ func (g *Game) Update() error {
 				})
 
 				g.mode = ModeGameOver
-				g.gameOverAudio.Rewind()
-				g.gameOverAudio.Play()
+
+				gameOverAudio.Rewind()
+				gameOverAudio.Play()
 			}
 
 			if birdman.damagedTicks%ebiten.MaxTPS() == 0 {
@@ -295,8 +405,8 @@ func (g *Game) Update() error {
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
-	backgroundImgWidth, backgroundImgHeight := g.backgroundImg.Size()
-	seaImgWidth, seaImgHeight := g.seaImg.Size()
+	backgroundImgWidth, backgroundImgHeight := backgroundImg.Size()
+	seaImgWidth, seaImgHeight := seaImg.Size()
 
 	// Background sky
 	for i := -1; i < screenWidth/backgroundImgWidth+2; i++ {
@@ -309,7 +419,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 			float64(i*backgroundImgWidth-g.cameraX%backgroundImgWidth),
 			0,
 		)
-		screen.DrawImage(g.backgroundImg, backgroundImgOpt)
+		screen.DrawImage(backgroundImg, backgroundImgOpt)
 	}
 
 	// Sea
@@ -319,18 +429,18 @@ func (g *Game) Draw(screen *ebiten.Image) {
 			float64(i*seaImgWidth-g.cameraX%seaImgWidth),
 			float64(screenHeight-seaImgHeight),
 		)
-		screen.DrawImage(g.seaImg, seaImgOpt)
+		screen.DrawImage(seaImg, seaImgOpt)
 	}
 
 	// Cliff
-	cliffImgWidth, _ := g.cliffImg.Size()
+	cliffImgWidth, _ := cliffImg.Size()
 	cliffImgOpt := &ebiten.DrawImageOptions{}
 	cliffImgOpt.GeoM.Scale(cliffWidth/float64(cliffImgWidth), 1.0)
 	cliffImgOpt.GeoM.Translate(
 		float64(-cliffWidth-g.cameraX),
 		initialBirdmanPosY+birdmanHeight/3,
 	)
-	screen.DrawImage(g.cliffImg, cliffImgOpt)
+	screen.DrawImage(cliffImg, cliffImgOpt)
 
 	// Birdman
 	g.birdman.Draw(screen, g)
@@ -345,123 +455,29 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	switch g.mode {
 	case ModeTitle:
 		titleText := "BIRDMAN CHALLENGE"
-		text.Draw(screen, titleText, g.titleFont, screenWidth/2-len(titleText)*titleFontSize/2, 90, color.White)
+		text.Draw(screen, titleText, titleFont, screenWidth/2-len(titleText)*titleFontSize/2, 90, color.White)
 		descriptionText := "CLICK TO START"
-		text.Draw(screen, descriptionText, g.regularFont, screenWidth/2-len(descriptionText)*fontSize/2, 170, color.White)
+		text.Draw(screen, descriptionText, regularFont, screenWidth/2-len(descriptionText)*regularFontSize/2, 170, color.White)
 
 		licenseTexts := []string{"PHOTO: OITA-SHI (FIND/47)", "FONT: Press Start 2P by CodeMan38", "SOUND: MaouDamashii"}
 		for i, s := range licenseTexts {
-			text.Draw(screen, s, g.smallFont, screenWidth/2-len(s)*smallFontSize/2, int(420+float32(i)*smallFontSize*1.7), color.White)
+			text.Draw(screen, s, smallFont, screenWidth/2-len(s)*smallFontSize/2, int(420+float32(i)*smallFontSize*1.7), color.White)
 		}
 	case ModeGame:
 		recordText := fmt.Sprintf("%sm", formatIntComma(record))
-		text.Draw(screen, recordText, g.smallFont, 24, 24, color.White)
+		text.Draw(screen, recordText, smallFont, 24, 24, color.White)
 	case ModeGameOver:
 		const gameOverText = "GAME OVER"
-		text.Draw(screen, gameOverText, g.titleFont, screenWidth/2-len(gameOverText)*titleFontSize/2, 180, color.White)
+		text.Draw(screen, gameOverText, titleFont, screenWidth/2-len(gameOverText)*titleFontSize/2, 180, color.White)
 		recordText := []string{"YOUR RECORD IS", fmt.Sprintf("%sm!", formatIntComma(record))}
 		for i, s := range recordText {
-			text.Draw(screen, s, g.regularFont, screenWidth/2-len(s)*fontSize/2, 250+i*(fontSize*2), color.White)
+			text.Draw(screen, s, regularFont, screenWidth/2-len(s)*regularFontSize/2, 250+i*(regularFontSize*2), color.White)
 		}
 	}
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 	return screenWidth, screenHeight
-}
-
-func formatIntComma(n int) string {
-	s := fmt.Sprintf("%d", n)
-	ret := ""
-	for i, c := range s {
-		ret += string(c)
-		if i+1 < len(s) && (len(s)-i-1)%3 == 0 {
-			ret += ","
-		}
-	}
-	return ret
-}
-
-func loadImage(name string) *ebiten.Image {
-	f, err := resources.Open(name)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer f.Close()
-	img, _, err := image.Decode(f)
-	if err != nil {
-		log.Fatal(err)
-	}
-	return ebiten.NewImageFromImage(img)
-}
-
-func loadFonts() (titleFont, regularFont, smallFont font.Face) {
-	f, err := resources.Open("resources/PressStart2P-Regular.ttf")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer f.Close()
-	fontData, err := ioutil.ReadAll(f)
-	if err != nil {
-		log.Fatal(err)
-	}
-	tt, err := opentype.Parse(fontData)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	const dpi = 72
-	titleFont, err = opentype.NewFace(tt, &opentype.FaceOptions{
-		Size:    titleFontSize,
-		DPI:     dpi,
-		Hinting: font.HintingFull,
-	})
-	if err != nil {
-		log.Fatal(err)
-	}
-	regularFont, err = opentype.NewFace(tt, &opentype.FaceOptions{
-		Size:    fontSize,
-		DPI:     dpi,
-		Hinting: font.HintingFull,
-	})
-	if err != nil {
-		log.Fatal(err)
-	}
-	smallFont, err = opentype.NewFace(tt, &opentype.FaceOptions{
-		Size:    smallFontSize,
-		DPI:     dpi,
-		Hinting: font.HintingFull,
-	})
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	return
-}
-
-func loadAudio(name string, audioContext *audio.Context) *audio.Player {
-	f, err := resources.Open(name)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer f.Close()
-
-	data, err := ioutil.ReadAll(f)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	stream, err := mp3.Decode(audioContext, bytes.NewReader(data))
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	player, err := audio.NewPlayer(audioContext, stream)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	return player
 }
 
 func (g *Game) initialize() {
@@ -476,22 +492,9 @@ func (g *Game) initialize() {
 	g.mode = ModeTitle
 	g.cameraX = -100
 	g.cameraY = 0
-	g.seaImg = loadImage("resources/sea.png")
-	g.cliffImg = loadImage("resources/cliff.png")
-	g.backgroundImg = loadImage("resources/background.png")
-	titleFont, regularFont, smallFont := loadFonts()
-	g.titleFont = titleFont
-	g.regularFont = regularFont
-	g.smallFont = smallFont
-	if g.audioContext == nil {
-		g.audioContext = audio.NewContext(48000)
-	}
-	g.damageAudio = loadAudio("resources/魔王魂  レトロ22.mp3", g.audioContext)
-	g.gameOverAudio = loadAudio("resources/魔王魂  レトロ12.mp3", g.audioContext)
-	g.flyingAudio = loadAudio("resources/魔王魂 効果音 羽音01.mp3", g.audioContext)
 
 	birdman := &Birdman{
-		img:          loadImage("resources/birdman.png"),
+		img:          birdmanImg,
 		state:        StateRunning,
 		x:            -60,
 		y:            initialBirdmanPosY,
