@@ -10,16 +10,21 @@ if (!WebAssembly.instantiateStreaming) {
 }
 
 var version = ""
+var compress = ""
 try {
   let query = Object.fromEntries(location.search.substr(1,).split('&').map((kv) => kv.split('=')))
-  if (String(query.v).match(/^\d+$/)) {
-    version = ".v" + query.v
+  if (String(query.version).match(/^\d+$/)) {
+    version = ".v" + query.version
+  }
+  if (String(query.compress).match(/^(gz)$/)) {
+    compress = "." + query.compress
   }
 } catch {
 }
 
 const go = new Go();
-WebAssembly.instantiateStreaming(fetch(`https://storage.googleapis.com/tsujio-game-serve/birdman/birdman${version}.wasm`), go.importObject).then(result => {
+const url = `https://storage.googleapis.com/tsujio-game-serve/birdman/birdman${version}.wasm${compress}`
+WebAssembly.instantiateStreaming(fetch(url), go.importObject).then(result => {
   go.run(result.instance);
 });
 </script>
