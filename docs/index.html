@@ -3,8 +3,33 @@
   <head>
     <meta charset="utf-8">
     <title>Birdman</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <link rel="stylesheet" href="./index.css">
   </head>
   <body>
-    <iframe src="./game.html" width="640" height="480"></iframe>
+    <div class="container">
+      <div class="header">
+        <h1>Birdman Challenge (2021)</h1>
+      </div>
+      <div class="game-container">
+        <iframe src="./game.html" width="640" height="480"></iframe>
+      </div>
+      <div class="description-container">
+        <div class="description">
+          <p>鳥人間コンテストを題材にしたタップ操作だけで遊べるゲームです。</p>
+          <p><a href="https://aba.hatenablog.com/entry/2021/08/08/195706">ワンボタンゲームをたくさん作ったので、その作り方をおさらいしたい - ABAの日誌</a> の記事でワンボタンゲームというジャンルがあることを知り、クリック／タップ操作だけが許された環境でどれだけ「おもしろさ」を追及できるかということに興味を持ったのがきっかけです。</p>
+          <p>ゲームを作って公開することは以前から興味がありましたが、おもしろいゲームを作るにはシナリオが壮大だったりイラストや音楽を凝ったりしないといけないのではないかという思いからなかなか手が出ませんでした。しかしこのワンボタンゲームなら規模が小さくとも何か「おもしろさの本質」のようなものを発見し表現できるような気がして、ゲーム作りに挑戦しようと思えるようになりました。</p>
+          <p>実装は <a href="https://ebiten.org/">Ebiten</a> というゲームライブラリを用いました。Web や iOS/Android 向けのバイナリを同じソースから生成できるというのが利点です。</p>
+        </div>
+      </div>
+      <div class="link-container">
+        <ul>
+          <li><a href="https://github.com/tsujio/game-birdman">ソースコード</a></li>
+        </ul>
+      </div>
+      <div class="footer">
+        <p>&copy; <a href="https://www.tsujio.org">辻尾研</a></p>
+      </div>
+    </div>
   </body>
 </html>
