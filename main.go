@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"embed"
 	"fmt"
 	"image"
@@ -15,7 +14,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/audio"
-	"github.com/hajimehoshi/ebiten/v2/audio/mp3"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"github.com/hajimehoshi/ebiten/v2/text"
 	logging "github.com/tsujio/game-logging-server/client"
@@ -39,7 +37,7 @@ const (
 	smallFontSize                 = regularFontSize / 2
 )
 
-//go:embed resources
+//go:embed resources/*.ttf resources/*.png resources/*.dat
 var resources embed.FS
 
 var (
@@ -50,9 +48,9 @@ var (
 	birdImg                           = loadImage("resources/bird.png")
 	titleFont, regularFont, smallFont = loadFont("resources/PressStart2P-Regular.ttf")
 	audioContext                      = audio.NewContext(48000)
-	damageAudio                       = loadAudio("resources/魔王魂  レトロ22.mp3", audioContext)
-	gameOverAudio                     = loadAudio("resources/魔王魂  レトロ12.mp3", audioContext)
-	flyingAudio                       = loadAudio("resources/魔王魂 効果音 羽音01.mp3", audioContext)
+	damageAudio                       = loadAudio("resources/魔王魂  レトロ22.mp3.dat", audioContext)
+	gameOverAudio                     = loadAudio("resources/魔王魂  レトロ12.mp3.dat", audioContext)
+	flyingAudio                       = loadAudio("resources/魔王魂 効果音 羽音01.mp3.dat", audioContext)
 )
 
 func loadImage(name string) *ebiten.Image {
@@ -124,17 +122,7 @@ func loadAudio(name string, audioContext *audio.Context) *audio.Player {
 		log.Fatal(err)
 	}
 
-	stream, err := mp3.Decode(audioContext, bytes.NewReader(data))
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	audioData, err := ioutil.ReadAll(stream)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	player := audio.NewPlayerFromBytes(audioContext, audioData)
+	player := audio.NewPlayerFromBytes(audioContext, data)
 
 	return player
 }
