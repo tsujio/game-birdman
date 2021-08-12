@@ -9,8 +9,17 @@ if (!WebAssembly.instantiateStreaming) {
   };
 }
 
+var version = ""
+try {
+  let query = Object.fromEntries(location.search.substr(1,).split('&').map((kv) => kv.split('=')))
+  if (String(query.v).match(/^\d+$/)) {
+    version = ".v" + query.v
+  }
+} catch {
+}
+
 const go = new Go();
-WebAssembly.instantiateStreaming(fetch("https://storage.googleapis.com/tsujio-game-serve/birdman/birdman.wasm"), go.importObject).then(result => {
+WebAssembly.instantiateStreaming(fetch(`https://storage.googleapis.com/tsujio-game-serve/birdman/birdman${version}.wasm`), go.importObject).then(result => {
   go.run(result.instance);
 });
 </script>
