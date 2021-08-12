@@ -48,9 +48,9 @@ var (
 	birdImg                           = loadImage("resources/bird.png")
 	titleFont, regularFont, smallFont = loadFont("resources/PressStart2P-Regular.ttf")
 	audioContext                      = audio.NewContext(48000)
-	damageAudio                       = loadAudio("resources/魔王魂  レトロ22.mp3.dat", audioContext)
-	gameOverAudio                     = loadAudio("resources/魔王魂  レトロ12.mp3.dat", audioContext)
-	flyingAudio                       = loadAudio("resources/魔王魂 効果音 羽音01.mp3.dat", audioContext)
+	damageAudioData                   = loadAudioData("resources/魔王魂  レトロ22.mp3.dat", audioContext)
+	gameOverAudioData                 = loadAudioData("resources/魔王魂  レトロ12.mp3.dat", audioContext)
+	flyingAudioData                   = loadAudioData("resources/魔王魂 効果音 羽音01.mp3.dat", audioContext)
 )
 
 func loadImage(name string) *ebiten.Image {
@@ -110,7 +110,7 @@ func loadFont(name string) (titleFont, regularFont, smallFont font.Face) {
 	return
 }
 
-func loadAudio(name string, audioContext *audio.Context) *audio.Player {
+func loadAudioData(name string, audioContext *audio.Context) []byte {
 	f, err := resources.Open(name)
 	if err != nil {
 		log.Fatal(err)
@@ -122,9 +122,7 @@ func loadAudio(name string, audioContext *audio.Context) *audio.Player {
 		log.Fatal(err)
 	}
 
-	player := audio.NewPlayerFromBytes(audioContext, data)
-
-	return player
+	return data
 }
 
 func formatIntComma(n int) string {
@@ -308,8 +306,7 @@ func (g *Game) Update() error {
 				ay /= birdman.damagedCount + 1
 				birdman.vy += ay
 
-				flyingAudio.Rewind()
-				flyingAudio.Play()
+				audio.NewPlayerFromBytes(audioContext, flyingAudioData).Play()
 			}
 
 			// Birdman gravity
@@ -327,8 +324,7 @@ func (g *Game) Update() error {
 				birdman.damagedCount += 1
 				birdman.state = StateDamaged
 
-				damageAudio.Rewind()
-				damageAudio.Play()
+				audio.NewPlayerFromBytes(audioContext, damageAudioData).Play()
 			}
 
 			// Birdman and birds collision
@@ -338,8 +334,7 @@ func (g *Game) Update() error {
 					birdman.damagedCount += 1
 					birdman.state = StateDamaged
 
-					damageAudio.Rewind()
-					damageAudio.Play()
+					audio.NewPlayerFromBytes(audioContext, damageAudioData).Play()
 
 					break
 				}
@@ -356,8 +351,7 @@ func (g *Game) Update() error {
 
 				g.mode = ModeGameOver
 
-				gameOverAudio.Rewind()
-				gameOverAudio.Play()
+				audio.NewPlayerFromBytes(audioContext, gameOverAudioData).Play()
 			}
 		case StateDamaged:
 			// Birds move
@@ -380,8 +374,7 @@ func (g *Game) Update() error {
 
 				g.mode = ModeGameOver
 
-				gameOverAudio.Rewind()
-				gameOverAudio.Play()
+				audio.NewPlayerFromBytes(audioContext, gameOverAudioData).Play()
 			}
 
 			if birdman.damagedTicks%ebiten.MaxTPS() == 0 {
