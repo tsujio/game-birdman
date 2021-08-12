@@ -238,7 +238,13 @@ type Game struct {
 }
 
 func (g *Game) isJustTapped() bool {
-	return inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft)
+	if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
+		return true
+	}
+	if touchIDs := inpututil.JustPressedTouchIDs(); len(touchIDs) > 0 {
+		return true
+	}
+	return false
 }
 
 func (g *Game) Update() error {
