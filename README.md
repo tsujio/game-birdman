@@ -2,6 +2,8 @@
 
 ![Birdman Challenge](https://github.com/tsujio/game-birdman/blob/main/image.png?raw=true)
 
+[Demo](https://www.tsujio.org/game-birdman/)
+
 # Thanks
 
 - Game engine: [ebiten](https://ebiten.org/)
