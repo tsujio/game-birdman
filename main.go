@@ -10,6 +10,7 @@ import (
 	"log"
 	"math"
 	"math/rand"
+	"os"
 
 	"github.com/google/uuid"
 	"github.com/hajimehoshi/ebiten/v2"
@@ -495,6 +496,10 @@ func (g *Game) initialize() {
 }
 
 func main() {
+	if os.Getenv("GAME_LOGGING") != "1" {
+		logging.Disable()
+	}
+
 	ebiten.SetWindowSize(screenWidth, screenHeight)
 	ebiten.SetWindowTitle("Birdman")
 
