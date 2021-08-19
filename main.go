@@ -447,9 +447,9 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		descriptionText := "CLICK TO START"
 		text.Draw(screen, descriptionText, regularFont, screenWidth/2-len(descriptionText)*regularFontSize/2, 170, color.White)
 
-		licenseTexts := []string{"PHOTO: OITA-SHI (FIND/47)", "FONT: Press Start 2P by CodeMan38", "SOUND: MaouDamashii"}
+		licenseTexts := []string{"CREATOR: NAOKI TSUJIO", "PHOTO: OITA-SHI (FIND/47)", "FONT: Press Start 2P by CodeMan38", "SOUND: MaouDamashii"}
 		for i, s := range licenseTexts {
-			text.Draw(screen, s, smallFont, screenWidth/2-len(s)*smallFontSize/2, int(420+float32(i)*smallFontSize*1.7), color.White)
+			text.Draw(screen, s, smallFont, screenWidth/2-len(s)*smallFontSize/2, int(410+float32(i)*smallFontSize*1.7), color.White)
 		}
 	case ModeGame:
 		recordText := fmt.Sprintf("%sm", formatIntComma(record))
