@@ -11,6 +11,8 @@ import (
 	"math"
 	"math/rand"
 	"os"
+	"strconv"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/hajimehoshi/ebiten/v2"
@@ -498,6 +500,11 @@ func (g *Game) initialize() {
 func main() {
 	if os.Getenv("GAME_LOGGING") != "1" {
 		logging.Disable()
+	}
+	if seed, err := strconv.Atoi(os.Getenv("GAME_RAND_SEED")); err == nil {
+		rand.Seed(int64(seed))
+	} else {
+		rand.Seed(time.Now().Unix())
 	}
 
 	ebiten.SetWindowSize(screenWidth, screenHeight)
