@@ -230,6 +230,7 @@ const (
 )
 
 type Game struct {
+	playerID         string
 	playID           string
 	initializeCount  int
 	mode             Mode
@@ -255,8 +256,9 @@ func (g *Game) Update() error {
 	case ModeTitle:
 		if g.isJustTapped() {
 			logging.LogAsync(gameName, map[string]interface{}{
-				"play_id": g.playID,
-				"action":  "start_game",
+				"player_id": g.playerID,
+				"play_id":   g.playID,
+				"action":    "start_game",
 			})
 
 			g.mode = ModeGame
@@ -346,6 +348,7 @@ func (g *Game) Update() error {
 			// Birdman fall
 			if birdman.y > screenHeight {
 				logging.LogAsync(gameName, map[string]interface{}{
+					"player_id":     g.playerID,
 					"play_id":       g.playID,
 					"action":        "game_over",
 					"x":             birdman.x,
@@ -369,6 +372,7 @@ func (g *Game) Update() error {
 
 			if birdman.y > screenHeight {
 				logging.LogAsync(gameName, map[string]interface{}{
+					"player_id":     g.playerID,
 					"play_id":       g.playID,
 					"action":        "game_over",
 					"x":             birdman.x,
@@ -474,9 +478,10 @@ func (g *Game) initialize() {
 	g.initializeCount++
 
 	logging.LogAsync(gameName, map[string]interface{}{
-		"play_id": g.playID,
-		"action":  "initialize",
-		"count":   g.initializeCount,
+		"player_id": g.playerID,
+		"play_id":   g.playID,
+		"action":    "initialize",
+		"count":     g.initializeCount,
 	})
 
 	g.mode = ModeTitle
@@ -506,6 +511,12 @@ func main() {
 	} else {
 		rand.Seed(time.Now().Unix())
 	}
+	playerID := os.Getenv("GAME_PLAYER_ID")
+	if playerID == "" {
+		if playerIDObj, err := uuid.NewRandom(); err == nil {
+			playerID = playerIDObj.String()
+		}
+	}
 
 	ebiten.SetWindowSize(screenWidth, screenHeight)
 	ebiten.SetWindowTitle("Birdman")
@@ -519,6 +530,7 @@ func main() {
 
 	}
 	game := &Game{
+		playerID:        playerID,
 		playID:          playID,
 		initializeCount: 0,
 	}
