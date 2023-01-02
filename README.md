@@ -2,7 +2,7 @@
 
 ![Birdman Challenge](https://github.com/tsujio/game-birdman/blob/main/image.png?raw=true)
 
-[Play](https://www.tsujio.org/games/game.html?title=birdman)
+[Play](https://game.tsujio.org/game.html?title=birdman)
 
 # Credits
 
