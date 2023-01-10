@@ -261,6 +261,8 @@ github.com/tsujio/game-logging-server/client v0.0.0-20210811145826-4f93090705a1 
 github.com/tsujio/game-logging-server/client v0.0.0-20210811145826-4f93090705a1/go.mod h1:HfLj9UswkjpQEPlfiwqpQ04KM7l9FGsVuROdInOsLPU=
 github.com/tsujio/game-logging-server/client v0.0.0-20210819010604-02078e15b559 h1:e+Hc6wGEMZcPIdfpy+FFveceOSnJJWCYlzuhtQmh9rM=
 github.com/tsujio/game-logging-server/client v0.0.0-20210819010604-02078e15b559/go.mod h1:HfLj9UswkjpQEPlfiwqpQ04KM7l9FGsVuROdInOsLPU=
+github.com/tsujio/game-logging-server/client v0.0.0-20230108051530-a7e4a1b23b63 h1:GsrGlyozjXoo3sjX04qEYqE02k/Bs87FXlg5mf6FQ5c=
+github.com/tsujio/game-logging-server/client v0.0.0-20230108051530-a7e4a1b23b63/go.mod h1:HfLj9UswkjpQEPlfiwqpQ04KM7l9FGsVuROdInOsLPU=
 github.com/urfave/cli v1.20.0/go.mod h1:70zkFmudgCuE/ngEzBv17Jvp/497gISqfk5gWijbERA=
 github.com/urfave/cli v1.22.1/go.mod h1:Gos4lmkARVdJ6EkW0WaNv/tZAAMe9V7XWyB60NtXRu0=
 github.com/xiang90/probing v0.0.0-20190116061207-43a291ad63a2/go.mod h1:UETIi67q53MR2AWcXfiuqkDkRtnGDLqkBTpCHuJHxtU=
